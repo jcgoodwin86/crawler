@@ -16,17 +16,19 @@ func main() {
 		fmt.Println("too many arguments provided")
 		os.Exit(1)
 	}
-
 	rawBaseURL := os.Args[1]
-	maxConcurrency, err := strconv.Atoi(os.Args[2])
+	maxConcurrencyString := os.Args[2]
+	maxPagesString := os.Args[3]
+
+	maxConcurrency, err := strconv.Atoi(maxConcurrencyString)
 	if err != nil {
-		fmt.Printf("Error - strconv.Atoi: %v", err)
-		os.Exit(1)
+		fmt.Printf("Error - maxConcurrency: %v", err)
+		return
 	}
-	maxPages, err := strconv.Atoi(os.Args[3])
+	maxPages, err := strconv.Atoi(maxPagesString)
 	if err != nil {
-		fmt.Printf("Error - strconv.Atoi: %v", err)
-		os.Exit(1)
+		fmt.Printf("Error - maxPages: %v", err)
+		return
 	}
 
 	cfg, err := configure(rawBaseURL, maxConcurrency, maxPages)
@@ -41,7 +43,7 @@ func main() {
 	go cfg.crawlPage(rawBaseURL)
 	cfg.wg.Wait()
 
-	for normalizedURL, pageData := range cfg.pages {
-		fmt.Printf("%d - %s\n", pageData.VisitCount, normalizedURL)
+	if err := writeCSVReport(cfg.pages, "report.csv"); err != nil {
+		fmt.Printf("Error - writeCSVReport: %v\n", err)
 	}
 }
